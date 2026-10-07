@@ -10,7 +10,7 @@
 | --- | --- | --- | --- | --- |
 | `brushflowmodern` | 站点刷流(本地版) | 6.1.2 | 官方 `BrushFlow` V3 6.1.2（jxxghp/MoviePilot-Plugins） | 以官方 V3 6.1.2 为基线的**独立本地版**（独立 ID，避免被在线源覆盖）。含本地魔改特性：复活区、站点数据自动刷新、站点下载量控制、任务级限速、空间不足删种、删种条件增强（老种下限/只删已完成/最短做种时间/无活跃跳过）、TTGL 积分商店折扣。 |
 | `updatewechatipmodern` | 动态企微可信IP(魔改) | 5.1.5 | 书小白 `UpdateWeChatIp`（thshu/MoviePilot-Plugins，上游索引版 1.0.8） | 企业微信应用可信 IP 自动更新的本地魔改版（Cookie 惰性获取、执行日志、立即运行、IP 缓存优化）。 |
-| `sitedailystatisticmodern` | 站点每日数据统计(本地版) | 4.0 | Xiang `SiteDailyStatistic` 4.0（xiangt920/MoviePilot-Plugins） | 每日汇总各 PT 站的做种/下载/分享率等数据。 |
+| `sitedailystatisticmodern` | 站点每日数据统计(本地版) | 4.0 | Xiang `SiteDailyStatistic` 4.0（xiangt920/MoviePilot-Plugins） | 每日汇总各 PT 站的做种/下载/分享率等数据。**本地定制：新增「关注站点」配置（多选），仅通知/推送勾选站点的当日数据，留空则推送全部站点。** |
 
 **V2 线存档**（`plugins.v2/` + `package.v2.json`）
 
