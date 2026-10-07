@@ -26,7 +26,7 @@
     "system_version": ">=3.0.0",
     "v3": true,
     "history": {
-      "v4.0": "本地独立版。"
+      "v4.0": "基于 Xiang 版 4.0 的本地独立版：新增「关注站点」配置（多选）——仅通知/推送勾选站点的当日数据，留空则推送全部站点；另改用独立 ID、独立配置前缀（sitedailystatisticmodern_）与服务 ID，避免与在线源同 ID 互相覆盖。"
     },
     "release": true
   },
