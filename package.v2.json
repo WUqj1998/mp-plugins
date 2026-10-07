@@ -16,5 +16,20 @@
       "5.4.0": "代码结构优化与限速重构。",
       "5.3.0": "Vue 重构多站点刷流工作台。"
     }
+  },
+  "updatewechatipv2": {
+    "v3": false,
+    "name": "动态企微可信IP(V2 定制旧版)",
+    "description": "V2 线的本地定制旧版企微可信 IP 更新插件（存档）。已被 V3 的 updatewechatipmodern 取代；原 ID UpdateWeChatIp 与官方插件同名会被官方来源遮蔽，故改为独立 ID。",
+    "labels": "消息通知",
+    "version": "5.1.5",
+    "icon": "Wecom_A.png",
+    "author": "WUqj1998",
+    "level": 2,
+    "release": true,
+    "system_version": ">=2.12.0,<3.0.0",
+    "history": {
+      "5.1.5": "V2 线定制旧版：CookieCloud 自动获取 Cookie、可信 IP 自动更新；现已被 updatewechatipmodern 取代，改名为独立 ID 存档。"
+    }
   }
 }

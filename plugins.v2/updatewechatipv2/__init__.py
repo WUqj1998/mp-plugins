@@ -1,5 +1,5 @@
 """
-动态企微可信IP 插件 v5.1.0
+动态企微可信IP 插件（V2 线定制旧版，存档）v5.1.5
 基于MP CookieCloudHelper自动获取Cookie，删除二维码登录功能
 """
 import re
@@ -15,15 +15,15 @@ from app.log import logger
 from app.plugins import _PluginBase
 
 
-class UpdateWeChatIp(_PluginBase):
+class updatewechatipv2(_PluginBase):
     # 插件基本信息
-    plugin_name = "动态企微可信IP"
-    plugin_desc = "修改企微应用可信IP，自动从CookieCloud获取Cookie"
+    plugin_name = "动态企微可信IP(V2 定制旧版)"
+    plugin_desc = "[V2 线定制旧版] 修改企微应用可信IP，自动从CookieCloud获取Cookie（已被 updatewechatipmodern 取代，仅作存档）"
     plugin_icon = "Wecom_A.png"
     plugin_version = "5.1.5"
     plugin_author = "书小白"
     author_url = "https://github.com/thshu/MoviePilot-Plugins"
-    plugin_config_prefix = "UpdateWeChatIp_"
+    plugin_config_prefix = "updatewechatipv2_"
     plugin_order = 50
     auth_level = 1
 
@@ -197,7 +197,7 @@ class UpdateWeChatIp(_PluginBase):
             # 获取最新配置
             from app.db.systemconfig_oper import SystemConfigOper
             db = SystemConfigOper()
-            config = db.get("plugin.UpdateWeChatIp") or {}
+            config = db.get("plugin.updatewechatipv2") or {}
             
             return [
                 {
@@ -614,7 +614,7 @@ class UpdateWeChatIp(_PluginBase):
         if not config:
             from app.db.systemconfig_oper import SystemConfigOper
             db = SystemConfigOper()
-            config = db.get("plugin.UpdateWeChatIp") or {}
+            config = db.get("plugin.updatewechatipv2") or {}
         
         if not self._enabled:
             logger.debug("插件未开启")
@@ -639,9 +639,9 @@ class UpdateWeChatIp(_PluginBase):
                     # 保存新Cookie到数据库
                     from app.db.systemconfig_oper import SystemConfigOper
                     db = SystemConfigOper()
-                    new_config = db.get("plugin.UpdateWeChatIp") or {}
+                    new_config = db.get("plugin.updatewechatipv2") or {}
                     new_config["_wwrtx_cookie"] = f"wwrtx.sid={self._wwrtx_sid}"
-                    db.set("plugin.UpdateWeChatIp", new_config)
+                    db.set("plugin.updatewechatipv2", new_config)
                     logger.info("✅ CookieCloud获取成功，已更新缓存")
                 else:
                     logger.error("❌ Cookie获取失败")
@@ -673,7 +673,7 @@ class UpdateWeChatIp(_PluginBase):
             # 从数据库读取缓存
             from app.db.systemconfig_oper import SystemConfigOper
             db = SystemConfigOper()
-            cached_config = db.get("plugin.UpdateWeChatIp") or {}
+            cached_config = db.get("plugin.updatewechatipv2") or {}
             cached_ip = cached_config.get("_last_checked_ip")
             cached_app_config = cached_config.get("_last_app_config")
             
@@ -687,7 +687,7 @@ class UpdateWeChatIp(_PluginBase):
                 # 保存缓存到数据库
                 cached_config["_last_checked_ip"] = self._ip
                 cached_config["_last_app_config"] = app_config
-                db.set("plugin.UpdateWeChatIp", cached_config)
+                db.set("plugin.updatewechatipv2", cached_config)
             
             app_config_ips = app_config.get('app', {}).get('white_ip_list', {}).get('ip', [])
             logger.info(f"当前白名单IP: {app_config_ips}")
@@ -742,10 +742,10 @@ class UpdateWeChatIp(_PluginBase):
         """清除立即运行触发器"""
         from app.db.systemconfig_oper import SystemConfigOper
         db = SystemConfigOper()
-        config = db.get("plugin.UpdateWeChatIp") or {}
+        config = db.get("plugin.updatewechatipv2") or {}
         if config.get("_run_now"):
             config["_run_now"] = False
-            db.set("plugin.UpdateWeChatIp", config)
+            db.set("plugin.updatewechatipv2", config)
             logger.debug("已清除立即运行触发器")
 
     def _filter_sensitive(self, text: str) -> str:

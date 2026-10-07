@@ -1,19 +1,4 @@
 {
-  "UpdateWeChatIp": {
-    "name": "动态企微可信IP(V2 遗留)",
-    "description": "【注意】与官方内置插件 updatewechatip 的 ID 规范化后同名，V3 下会被官方来源遮蔽而不生效；请优先使用 updatewechatipmodern。",
-    "labels": "工具",
-    "version": "5.1.5",
-    "icon": "wechat.png",
-    "author": "WUqj1998",
-    "level": 2,
-    "system_version": ">=2.12.0",
-    "v3": true,
-    "history": {
-      "v5.1.5": "V2 时代魔改版，V3 下不生效（ID 与官方冲突），仅作存档。"
-    },
-    "release": true
-  },
   "brushflowmodern": {
     "name": "站点刷流(本地版)",
     "description": "自动托管多个站点刷流任务，并独立调度、统计与诊断。以官方 V3 6.1.2 为基线的本地独立版，含本地魔改特性（复活区、站点数据刷新、站点下载量控制、任务级限速、空间不足删种、删种条件增强、TTGL 积分折扣等）。",
