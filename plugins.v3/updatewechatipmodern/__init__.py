@@ -21,7 +21,7 @@ class updatewechatipmodern(_PluginBase):
     plugin_desc = "[魔改版] 自动更新企微应用可信IP，支持Cookie惰性获取、立即运行、IP缓存"
     plugin_icon = "Wecom_A.png"
     plugin_version = "5.1.5"
-    plugin_author = "local(魔改自书小白)"
+    plugin_author = "书小白（本地魔改 · AI 修改）"
     author_url = "https://github.com/thshu/MoviePilot-Plugins"
     plugin_config_prefix = "updatewechatipmodern_"
     plugin_order = 99

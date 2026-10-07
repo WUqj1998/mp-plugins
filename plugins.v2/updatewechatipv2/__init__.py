@@ -21,7 +21,7 @@ class updatewechatipv2(_PluginBase):
     plugin_desc = "[V2 线定制旧版] 修改企微应用可信IP，自动从CookieCloud获取Cookie（已被 updatewechatipmodern 取代，仅作存档）"
     plugin_icon = "Wecom_A.png"
     plugin_version = "5.1.5"
-    plugin_author = "书小白"
+    plugin_author = "书小白（本地定制 · AI 修改）"
     author_url = "https://github.com/thshu/MoviePilot-Plugins"
     plugin_config_prefix = "updatewechatipv2_"
     plugin_order = 50

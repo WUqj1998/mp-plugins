@@ -36,7 +36,7 @@ class sitedailystatisticmodern(_PluginBase):
     # 插件版本
     plugin_version = "4.0"
     # 插件作者
-    plugin_author = "local(源自 Xiang)"
+    plugin_author = "Xiang（本地定制 · AI 修改）"
     # 作者主页
     author_url = "https://github.com/xiangt920"
     # 插件配置项ID前缀

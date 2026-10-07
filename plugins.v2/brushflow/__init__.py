@@ -290,7 +290,7 @@ class BrushFlow(_PluginBase):
     plugin_desc = "自动托管多个站点刷流任务，并独立调度、统计与诊断。"
     plugin_icon = "brush-flow.png"
     plugin_version = "5.5.7"
-    plugin_author = "jxxghp,InfinityPacer,Seed680"
+    plugin_author = "jxxghp,InfinityPacer,Seed680（本地定制 · AI 修改）"
     author_url = "https://github.com/InfinityPacer"
     plugin_config_prefix = "brushflow_"
     plugin_order = 21

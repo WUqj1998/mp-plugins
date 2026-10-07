@@ -2,7 +2,7 @@
   "BrushFlow": {
     "v3": false,
     "name": "站点刷流(V2 线存档)",
-    "description": "MoviePilot V2 线的本地魔改刷流插件（最终版存档）。含复活区、站点数据自动刷新、任务级限速、空间不足删种、删种条件增强、TTGL 积分商店折扣、全局动态删种双条件等特性。仅供 V2 环境使用与源码存档。",
+    "description": "MoviePilot V2 线的本地魔改刷流插件（最终版存档）。含复活区、站点数据自动刷新、任务级限速、空间不足删种、删种条件增强、TTGL 积分商店折扣、全局动态删种双条件等特性。仅供 V2 环境使用与源码存档。【来源：站点刷流 BrushFlow（https://github.com/jxxghp/MoviePilot-Plugins，基准 官方 V2 线（该线最后一版 5.2.3）分叉，本地魔改至 5.5.7（4268 行））；AI 辅助本地定制】",
     "labels": "刷流,仪表板",
     "version": "5.5.7",
     "icon": "brush-flow.png",
@@ -20,7 +20,7 @@
   "updatewechatipv2": {
     "v3": false,
     "name": "动态企微可信IP(V2 定制旧版)",
-    "description": "V2 线的本地定制旧版企微可信 IP 更新插件（存档）。已被 V3 的 updatewechatipmodern 取代；原 ID UpdateWeChatIp 与官方插件同名会被官方来源遮蔽，故改为独立 ID。",
+    "description": "V2 线的本地定制旧版企微可信 IP 更新插件（存档）。已被 V3 的 updatewechatipmodern 取代；原 ID UpdateWeChatIp 与官方插件同名会被官方来源遮蔽，故改为独立 ID。【来源：动态企微可信IP UpdateWeChatIp（https://github.com/thshu/MoviePilot-Plugins，基准 书小白版谱系；本地定制版本号 5.1.5（790 行），早于 modern 版）；AI 辅助本地定制】",
     "labels": "消息通知",
     "version": "5.1.5",
     "icon": "Wecom_A.png",

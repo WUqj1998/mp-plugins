@@ -1,7 +1,7 @@
 {
   "brushflowmodern": {
     "name": "站点刷流(本地版)",
-    "description": "自动托管多个站点刷流任务，并独立调度、统计与诊断。以官方 V3 6.1.2 为基线的本地独立版，含本地魔改特性（复活区、站点数据刷新、站点下载量控制、任务级限速、空间不足删种、删种条件增强、TTGL 积分折扣等）。",
+    "description": "自动托管多个站点刷流任务，并独立调度、统计与诊断。以官方 V3 6.1.2 为基线的本地独立版，含本地魔改特性（复活区、站点数据刷新、站点下载量控制、任务级限速、空间不足删种、删种条件增强、TTGL 积分折扣等）。【来源：站点刷流 BrushFlow（https://github.com/jxxghp/MoviePilot-Plugins，基准 官方 V3 线 6.1.2 全量源码（2999 行））；AI 辅助本地定制】",
     "labels": "刷流,仪表板",
     "version": "6.1.2",
     "icon": "brush-flow.png",
@@ -17,7 +17,7 @@
   },
   "sitedailystatisticmodern": {
     "name": "站点每日数据统计(本地版)",
-    "description": "每日汇总各 PT 站的做种/下载/分享率等数据（本地独立版）。",
+    "description": "每日汇总各 PT 站的做种/下载/分享率等数据（本地独立版）。【来源：站点每日数据统计 SiteDailyStatistic（https://github.com/xiangt920/MoviePilot-Plugins，基准 Xiang 版 4.0（1059 行））；AI 辅助本地定制】",
     "labels": "站点,统计",
     "version": "4.0",
     "icon": "site.png",
@@ -32,7 +32,7 @@
   },
   "updatewechatipmodern": {
     "name": "动态企微可信IP(魔改)",
-    "description": "自动更新企业微信应用可信 IP（本地魔改版，与官方同名插件分离，独立 ID 避免被在线源覆盖）。",
+    "description": "自动更新企业微信应用可信 IP（本地魔改版，与官方同名插件分离，独立 ID 避免被在线源覆盖）。【来源：动态企微可信IP UpdateWeChatIp（https://github.com/thshu/MoviePilot-Plugins，基准 书小白版谱系；上游索引版 1.0.8，本地定制版本号 5.1.5（806 行 vs 未定制版 790 行））；AI 辅助本地定制】",
     "labels": "工具",
     "version": "5.1.5",
     "icon": "wechat.png",
