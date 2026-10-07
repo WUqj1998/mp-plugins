@@ -45,21 +45,6 @@
     },
     "release": true
   },
-  "siteuserdatasync": {
-    "name": "站点数据同步",
-    "description": "把站点用户数据同步给其他插件或服务使用（本地定制）。",
-    "labels": "站点,工具",
-    "version": "1.0.0",
-    "icon": "site.png",
-    "author": "WUqj1998",
-    "level": 2,
-    "system_version": ">=3.0.0",
-    "v3": true,
-    "history": {
-      "v1.0.0": "本地定制版。"
-    },
-    "release": true
-  },
   "updatewechatipmodern": {
     "name": "动态企微可信IP(魔改)",
     "description": "自动更新企业微信应用可信 IP（本地魔改版，与官方同名插件分离，独立 ID 避免被在线源覆盖）。",

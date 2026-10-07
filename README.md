@@ -1,22 +1,31 @@
 # MoviePilot 本地定制插件仓库
 
-自用的 MoviePilot **V3** 插件仓库（与官方仓库结构一致），存放本地定制/魔改插件，供 MoviePilot 通过插件市场直接安装与升级。
+自用的 MoviePilot 插件仓库（与官方仓库结构一致），存放本地定制/魔改插件，供 MoviePilot 通过插件市场直接安装与升级。
 
 ## 插件清单
+
+**V3 线**（`plugins.v3/` + `package.v3.json`）
 
 | 插件 ID | 名称 | 版本 | 说明 |
 | --- | --- | --- | --- |
 | `brushflowmodern` | 站点刷流(本地版) | 6.1.2 | 以官方 V3 `brushflow` 6.1.2 为基线的**独立本地版**（独立 ID，避免被在线源覆盖）。含本地魔改特性：复活区、站点数据自动刷新、站点下载量控制、任务级限速、空间不足删种、删种条件增强（老种下限/只删已完成/最短做种时间/无活跃跳过）、TTGL 积分商店折扣。 |
 | `updatewechatipmodern` | 动态企微可信IP(魔改) | 5.1.5 | 企业微信应用可信 IP 自动更新的本地魔改版（Cookie 惰性获取、执行日志、立即运行、IP 缓存优化）。 |
 | `sitedailystatisticmodern` | 站点每日数据统计(本地版) | 4.0 | 每日汇总各 PT 站的做种/下载/分享率等数据。 |
-| `siteuserdatasync` | 站点数据同步 | 1.0.0 | 将站点用户数据同步给其它插件/服务使用。 |
 | `UpdateWeChatIp` | 动态企微可信IP(V2 遗留) | 5.1.5 | ⚠️ **仅作存档**。其 ID 经规范化后与官方内置插件 `updatewechatip` 同名，V3 下会被官方来源遮蔽而不生效，请改用 `updatewechatipmodern`。 |
+
+**V2 线存档**（`plugins.v2/` + `package.v2.json`）
+
+| 插件 ID | 名称 | 版本 | 说明 |
+| --- | --- | --- | --- |
+| `BrushFlow` | 站点刷流(V2 线存档) | 5.5.7 | V2 线本地魔改刷流的**最终版源码存档**，含复活区、站点数据刷新、任务级限速、空间不足删种、删种条件增强、TTGL 折扣、全局动态删种双条件等特性。`system_version` 限定为 `>=2.14.6,<3.0.0`，因此在 V3 宿主上不会作为可安装候选出现；仅 V2 环境可用。 |
 
 ## 仓库结构
 
 ```
 package.v3.json          # V3 插件索引（插件 ID → 元数据）
-plugins.v3/<插件id>/      # 各插件源码（含预构建 dist/，装完即用）
+plugins.v3/<插件id>/      # V3 插件源码（含预构建 dist/，装完即用）
+package.v2.json          # V2 插件索引（存档用）
+plugins.v2/<插件id>/      # V2 插件源码存档
 ```
 
 ## 在 MoviePilot 里添加本仓库
@@ -30,18 +39,18 @@ plugins.v3/<插件id>/      # 各插件源码（含预构建 dist/，装完即�
 
 3. 保存后回到插件市场刷新，即可看到上表中的插件。
 
-MP 读取索引的地址为 `https://raw.githubusercontent.com/WUqj1998/mp-plugins/main/package.v3.json`，插件包通过本仓库的 **GitHub Release** 资产下载（见下）。
+MP 读取索引的地址为 `https://raw.githubusercontent.com/WUqj1998/mp-plugins/main/package.v3.json`（V2 线为 `package.v2.json`），插件包通过本仓库的 **GitHub Release** 资产下载（见下）。
 
 ## 发布 / 更新流程
 
 索引条目 `release: true` 表示走 Release 安装，约定与官方一致：
 
-- tag：`<插件id>_v<版本号>`，例如 `brushflowmodern_v6.1.2`
-- 资产：`<tag 全小写>.zip`，例如 `brushflowmodern_v6.1.2.zip`
+- tag：`<插件id>_v<版本号>`，例如 `brushflowmodern_v6.1.2`、`BrushFlow_v5.5.7`
+- 资产：`<tag 全小写>.zip`，例如 `brushflowmodern_v6.1.2.zip`、`brushflow_v5.5.7.zip`
 - **zip 根目录即插件文件**（`__init__.py` 等直接位于 zip 根，不额外套一层目录）
-- 同时更新 `package.v3.json` 里该插件的 `version` 与 `history`
+- 同时更新对应 `package.vN.json` 里该插件的 `version` 与 `history`
 
-用户侧升级：插件市场里该插件出现新版本即可一键升级。
+推送后运行 `/opt/data/scripts/publish-mp-plugins.py` 自动建 release 并上传 zip（幂等，可反复执行）。用户侧在市场里看到新版本即可升级。
 
 ## 备注
 
