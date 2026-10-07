@@ -275,7 +275,7 @@ class brushflowmodern(_PluginBase):
     plugin_name = "站点刷流(本地版)"
     plugin_desc = "自动托管多个站点刷流任务，并独立调度、统计与诊断。（本地版，独立于官方 BrushFlow）"
     plugin_icon = "brush-flow.png"
-    plugin_version = "6.1.3"
+    plugin_version = "6.1.2"
     plugin_author = "jxxghp,InfinityPacer,Seed680（本地定制 · AI 修改）"
     author_url = "https://github.com/InfinityPacer"
     plugin_config_prefix = "brushflowmodern_"
