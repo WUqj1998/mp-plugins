@@ -1,0 +1,48 @@
+{
+  "brushflowmodern": {
+    "name": "站点刷流(本地版)",
+    "description": "自动托管多个站点刷流任务，并独立调度、统计与诊断。以官方 V3 6.1.2 为基线的本地独立版，含本地魔改特性（复活区、站点数据刷新、站点下载量控制、任务级限速、空间不足删种、删种条件增强、TTGL 积分折扣等）。【来源：站点刷流 BrushFlow（https://github.com/jxxghp/MoviePilot-Plugins，基准 官方 V3 线 6.1.2 全量源码（2999 行））；AI 辅助本地定制】",
+    "labels": "刷流,仪表板",
+    "version": "6.1.2",
+    "icon": "brush-flow.png",
+    "author": "WUqj1998",
+    "level": 2,
+    "release": true,
+    "system_version": ">=3.0.0",
+    "v3": true,
+    "history": {
+      "v6.1.2": "以官方 V3 6.1.2 为基线的本地独立版：新增任务级限速选项卡、站点下载量控制、状态检查优化、TTGL 积分商店折扣（听听歌）、复活区（URL+最小下载人数）、老种发布时间下限（与上新时间成 OR 语义）、只删除已完成种子+最小做种时间、站点数据自动刷新间隔；全局设置新增剩余空间阈值与空间不足自动删种；上传/下载带宽单位修正为 MB/s。",
+      "v6.0.x": "官方基线：种子下载标签、订阅识别改用媒体来源+媒体 ID、SDK 导入迁移。"
+    }
+  },
+  "sitedailystatisticmodern": {
+    "name": "站点每日数据统计(本地版)",
+    "description": "每日汇总各 PT 站的做种/下载/分享率等数据（本地独立版）。【来源：站点每日数据统计 SiteDailyStatistic（https://github.com/xiangt920/MoviePilot-Plugins，基准 Xiang 版 4.0（1059 行））；AI 辅助本地定制】",
+    "labels": "站点,统计",
+    "version": "4.0",
+    "icon": "site.png",
+    "author": "WUqj1998",
+    "level": 2,
+    "system_version": ">=3.0.0",
+    "v3": true,
+    "history": {
+      "v4.0": "基于 Xiang 版 4.0 的本地独立版：新增「关注站点」配置（多选）——仅通知/推送勾选站点的当日数据，留空则推送全部站点；另改用独立 ID、独立配置前缀（sitedailystatisticmodern_）与服务 ID，避免与在线源同 ID 互相覆盖。"
+    },
+    "release": true
+  },
+  "updatewechatipmodern": {
+    "name": "动态企微可信IP(魔改)",
+    "description": "自动更新企业微信应用可信 IP（本地魔改版，与官方同名插件分离，独立 ID 避免被在线源覆盖）。【来源：动态企微可信IP UpdateWeChatIp（https://github.com/thshu/MoviePilot-Plugins，基准 书小白版谱系；上游索引版 1.0.8，本地定制版本号 5.1.5（806 行 vs 未定制版 790 行））；AI 辅助本地定制】",
+    "labels": "工具",
+    "version": "5.1.5",
+    "icon": "wechat.png",
+    "author": "WUqj1998",
+    "level": 2,
+    "system_version": ">=3.0.0",
+    "v3": true,
+    "history": {
+      "v5.1.5": "本地魔改版：Cookie 惰性获取、条件渲染、执行日志、立即运行、IP 缓存优化。"
+    },
+    "release": true
+  }
+}
