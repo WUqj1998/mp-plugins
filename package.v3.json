@@ -32,16 +32,17 @@
   },
   "updatewechatipmodern": {
     "name": "动态企微可信IP(魔改)",
-    "description": "自动更新企业微信应用可信 IP（本地魔改版，与官方同名插件分离，独立 ID 避免被在线源覆盖）。【来源：动态企微可信IP UpdateWeChatIp（https://github.com/thshu/MoviePilot-Plugins，基准 书小白版谱系；上游索引版 1.0.8，本地定制版本号 5.1.5（806 行 vs 未定制版 790 行））；AI 辅助本地定制】",
+    "description": "自动更新企业微信应用可信 IP（本地魔改版，与官方同名插件分离，独立 ID 避免被在线源覆盖）。【来源：动态企微可信IP UpdateWeChatIp（https://github.com/thshu/MoviePilot-Plugins，基准 书小白版谱系；上游索引版 1.0.8，本地定制版本号 5.1.6（806 行 vs 未定制版 790 行））；AI 辅助本地定制】",
     "labels": "工具",
-    "version": "5.1.5",
+    "version": "5.1.6",
     "icon": "wechat.png",
     "author": "WUqj1998",
     "level": 2,
     "system_version": ">=3.0.0",
     "v3": true,
     "history": {
-      "v5.1.5": "本地魔改版：Cookie 惰性获取、条件渲染、执行日志、立即运行、IP 缓存优化。"
+      "v5.1.5": "本地魔改版：Cookie 惰性获取、条件渲染、执行日志、立即运行、IP 缓存优化。",
+      "v5.1.6": "取 IP 源改为全部 IPv4 可用源（ip.3322.net / ipv4.icanhazip.com / api-ipv4.ip.sb / ddns.oray.com），移除被重置且返回 IPv6 的 myip.ipip.net 与不可达的 4.ipw.cn，消除每 30 分钟一条取 IP 失败告警。"
     },
     "release": true
   }

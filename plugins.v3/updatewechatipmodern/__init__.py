@@ -20,7 +20,7 @@ class updatewechatipmodern(_PluginBase):
     plugin_name = "动态企微可信IP(魔改)"
     plugin_desc = "[魔改版] 自动更新企微应用可信IP，支持Cookie惰性获取、立即运行、IP缓存"
     plugin_icon = "Wecom_A.png"
-    plugin_version = "5.1.5"
+    plugin_version = "5.1.6"
     plugin_author = "书小白（本地魔改 · AI 修改）"
     author_url = "https://github.com/thshu/MoviePilot-Plugins"
     plugin_config_prefix = "updatewechatipmodern_"
@@ -47,12 +47,12 @@ class updatewechatipmodern(_PluginBase):
     # Cookie获取方式: 'manual'=手动输入, 'cookiecloud'=CookieCloud服务器
     _run_now = False  # 立即运行触发器（不保存）
 
-    # IP检测服务列表（已去重）
+    # IP检测服务列表（已去重，全部为 IPv4 源：本网络下 myip.ipip.net 连接被重置且返回 IPv6，4.ipw.cn 不可达）
     _ip_urls = [
-        "https://myip.ipip.net",
         "https://ip.3322.net",
+        "https://ipv4.icanhazip.com",
+        "https://api-ipv4.ip.sb/ip",
         "https://ddns.oray.com/checkip",
-        "https://4.ipw.cn",
     ]
     _ip_pattern = r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b'
 
