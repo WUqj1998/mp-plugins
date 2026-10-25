@@ -9,8 +9,9 @@
 | 插件 ID | 名称 | 版本 | 来源（定制基准） | 说明 |
 | --- | --- | --- | --- | --- |
 | `brushflowmodern` | 站点刷流(本地版) | 6.1.2 | 官方 `BrushFlow` V3 6.1.2（jxxghp/MoviePilot-Plugins） | 以官方 V3 6.1.2 为基线的**独立本地版**（独立 ID，避免被在线源覆盖）。含本地魔改特性：复活区、站点数据自动刷新、站点下载量控制、任务级限速、空间不足删种、删种条件增强（老种下限/只删已完成/最短做种时间/无活跃跳过）、TTGL 积分商店折扣。 |
-| `updatewechatipmodern` | 动态企微可信IP(魔改) | 5.1.5 | 书小白 `UpdateWeChatIp`（thshu/MoviePilot-Plugins，上游索引版 1.0.8） | 企业微信应用可信 IP 自动更新的本地魔改版（Cookie 惰性获取、执行日志、立即运行、IP 缓存优化）。 |
+| `updatewechatipmodern` | 动态企微可信IP(魔改) | 5.1.6 | 书小白 `UpdateWeChatIp`（thshu/MoviePilot-Plugins，上游索引版 1.0.8） | 企业微信应用可信 IP 自动更新的本地魔改版（Cookie 惰性获取、执行日志、立即运行、IP 缓存优化）。**v5.1.6：取 IP 源全部换成 IPv4 可用源（ip.3322.net / ipv4.icanhazip.com / api-ipv4.ip.sb / ddns.oray.com），移除被重置且返回 IPv6 的 myip.ipip.net 与不可达的 4.ipw.cn，消除每 30 分钟一条取 IP 失败告警。** |
 | `sitedailystatisticmodern` | 站点每日数据统计(本地版) | 4.0 | Xiang `SiteDailyStatistic` 4.0（xiangt920/MoviePilot-Plugins） | 每日汇总各 PT 站的做种/下载/分享率等数据。**本地定制：新增「关注站点」配置（多选），仅通知/推送勾选站点的当日数据，留空则推送全部站点。** |
+| `webdavbackupmodern` | WebDAV备份(魔改) | 2.0.3 | 官方 `WebDAVBackup` 2.0.2（InfinityPacer/MoviePilot-Plugins） | 定时把 MP V3 数据库一致性备份制品传到 WebDAV。**本地定制：新增「上传超时（秒）」配置（默认 300，最小 10），传入 webdav3 客户端的 `webdav_timeout`。** 官方版固定用该库默认 30s，慢速 WebDAV（天翼云 OpenList 实测 0.33 MB/s、26MB dump 需 82s）下每天上传必超时，异地副本会静默缺失一个月。 |
 
 **V2 线存档**（`plugins.v2/` + `package.v2.json`）
 
@@ -67,3 +68,5 @@ MP 读取索引的地址为 `https://raw.githubusercontent.com/WUqj1998/mp-plugi
 
 - 本仓库为个人自用，插件针对本机环境的 PT 站点与下载器（qBittorrent）定制，不保证通用性。
 - 插件代码中不含任何账号凭证；所有密钥（企微 Cookie、站点 Cookie、API Key 等）均通过 MoviePilot 的插件配置保存在本机数据库。
+- **定制官方插件时必须 fork 成独立 ID**（如 `webdavbackup` → `webdavbackupmodern`）：MP V3 按插件的可信来源在启动时同步 payload，同 ID 会被在线源覆盖、改动会在重启后消失；fork 版需同时改类名/`plugin_name`/`plugin_config_prefix`/服务 ID，避免与官方版互相覆盖或服务重名。
+- 直接改容器内 `/app/app/plugins/<id>/` 的源码**无效**——重启即被还原。要落地定制只能走本仓库发布流程。
