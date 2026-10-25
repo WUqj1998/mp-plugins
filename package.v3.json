@@ -45,5 +45,20 @@
       "v5.1.6": "取 IP 源改为全部 IPv4 可用源（ip.3322.net / ipv4.icanhazip.com / api-ipv4.ip.sb / ddns.oray.com），移除被重置且返回 IPv6 的 myip.ipip.net 与不可达的 4.ipw.cn，消除每 30 分钟一条取 IP 失败告警。"
     },
     "release": true
+  },
+  "webdavbackupmodern": {
+    "name": "WebDAV备份(魔改)",
+    "description": "定时通过 WebDAV 备份 MoviePilot V3 数据库（本地魔改版，与官方 webdavbackup 分离为独立 ID，避免官方更新覆盖本地改动）。定制内容：新增「上传超时（秒）」配置项（默认 300s）并传给 webdav3 客户端 webdav_timeout，解决慢速 WebDAV（天翼云实测 0.33 MB/s，26MB dump 需 82s）在默认 30s 超时下每次上传必失败的问题。【来源：WebDAV备份 WebDAVBackup（https://github.com/InfinityPacer/MoviePilot-Plugins，基准 2.0.2，本地定制版本号 2.0.3）；AI 辅助本地定制】",
+    "labels": "工具",
+    "version": "2.0.3",
+    "icon": "https://raw.githubusercontent.com/InfinityPacer/MoviePilot-Plugins/main/icons/webdavbackup.png",
+    "author": "WUqj1998",
+    "level": 1,
+    "system_version": ">=3.0.0",
+    "v3": true,
+    "history": {
+      "v2.0.3": "基于官方 2.0.2 定制：新增「上传超时（秒）」配置（默认 300，最小 10），传入 webdav3 客户端 webdav_timeout，修复慢速 WebDAV 下 30s 超时导致备份每日失败。"
+    },
+    "release": true
   }
 }
