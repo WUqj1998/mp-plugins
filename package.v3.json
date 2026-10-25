@@ -48,7 +48,7 @@
   },
   "webdavbackupmodern": {
     "name": "WebDAV备份(魔改)",
-    "description": "定时通过 WebDAV 备份 MoviePilot V3 数据库（本地魔改版，与官方 webdavbackup 分离为独立 ID，避免官方更新覆盖本地改动）。定制内容：新增「上传超时（秒）」配置项（默认 300s）并传给 webdav3 客户端 webdav_timeout，解决慢速 WebDAV（天翼云实测 0.33 MB/s，26MB dump 需 82s）在默认 30s 超时下每次上传必失败的问题。【来源：WebDAV备份 WebDAVBackup（https://github.com/InfinityPacer/MoviePilot-Plugins，基准 2.0.2，本地定制版本号 2.0.3）；AI 辅助本地定制】",
+    "description": "定时通过 WebDAV 备份 MoviePilot V3 数据库（本地魔改版，与官方 webdavbackup 分离为独立 ID，避免官方更新覆盖本地改动）。定制内容：新增「上传超时（秒）」配置项（默认 300s）并传给 webdav3 客户端 webdav_timeout，解决慢速 WebDAV（天翼云实测 0.33 MB/s，26MB dump 需 82s）在默认 30s 超时下每次上传必失败的问题。【来源：WebDAV备份 WebDAVBackup（https://github.com/InfinityPacer/MoviePilot-Plugins，基准 官方 2.0.2（301 行），本地定制版本号 2.0.3（309 行））；AI 辅助本地定制】",
     "labels": "工具",
     "version": "2.0.3",
     "icon": "https://raw.githubusercontent.com/InfinityPacer/MoviePilot-Plugins/main/icons/webdavbackup.png",
