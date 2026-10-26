@@ -17,7 +17,7 @@
   },
   "sitedailystatisticmodern": {
     "name": "站点每日数据统计(本地版)",
-    "description": "每日汇总各 PT 站的做种/下载/分享率等数据（本地独立版）。【来源：站点每日数据统计 SiteDailyStatistic（https://github.com/xiangt920/MoviePilot-Plugins，基准 Xiang 版 4.0（1059 行））；AI 辅助本地定制】",
+    "description": "每日汇总各 PT 站的做种/下载/分享率等数据（本地独立版）。【来源：站点每日数据统计 SiteDailyStatistic（https://github.com/xiangt920/MoviePilot-Plugins，基准 Xiang 版 4.0（1059 行），本地定制版本号 4.1（1257 行））；AI 辅助本地定制】",
     "labels": "站点,统计",
     "version": "4.1",
     "icon": "site.png",
