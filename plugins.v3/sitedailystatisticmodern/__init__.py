@@ -26,6 +26,52 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 lock = Lock()
 
 
+def _row_from_snapshot(domain: str, item: dict) -> SiteUserData:
+    """
+    把持久化快照项还原为站点数据行（仅用于缺数据时兜底，不入库）
+    """
+    row = SiteUserData()
+    row.domain = domain
+    row.name = item.get("name") or domain
+    row.upload = float(item.get("upload") or 0)
+    row.download = float(item.get("download") or 0)
+    row.updated_day = item.get("day") or ""
+    row.updated_time = item.get("time") or ""
+    row.err_msg = ""
+    return row
+
+
+def _calc_inc(today_row: SiteUserData, baseline_row: Optional[SiteUserData]) -> Tuple[int, int, int]:
+    """
+    计算今日增量：返回 (上传增量, 下载增量, 基线缺口天数)
+    没有基线时增量记 0（首次出现的站点不应该把历史累计当今日增量）；
+    站点累计值回退时按 0 处理，不写负数。
+    """
+    if today_row is None or baseline_row is None:
+        return 0, 0, 0
+    try:
+        up_now = float(today_row.upload or 0)
+        dn_now = float(today_row.download or 0)
+        up_base = float(baseline_row.upload or 0)
+        dn_base = float(baseline_row.download or 0)
+    except (TypeError, ValueError):
+        return 0, 0, 0
+    up = int(up_now - up_base)
+    dn = int(dn_now - dn_base)
+    if up < 0:
+        up = 0
+    if dn < 0:
+        dn = 0
+    gap = 0
+    try:
+        day_now = datetime.strptime((today_row.updated_day or "")[:10], "%Y-%m-%d")
+        day_base = datetime.strptime((baseline_row.updated_day or "")[:10], "%Y-%m-%d")
+        gap = max((day_now - day_base).days - 1, 0)
+    except ValueError:
+        gap = 0
+    return up, dn, gap
+
+
 class sitedailystatisticmodern(_PluginBase):
     # 插件名称
     plugin_name = "站点每日数据统计(本地版)"
@@ -34,7 +80,7 @@ class sitedailystatisticmodern(_PluginBase):
     # 插件图标
     plugin_icon = "Collabora_A.png"
     # 插件版本
-    plugin_version = "4.0"
+    plugin_version = "4.1"
     # 插件作者
     plugin_author = "Xiang（本地定制 · AI 修改）"
     # 作者主页
@@ -56,7 +102,11 @@ class sitedailystatisticmodern(_PluginBase):
     _dashboard_type: str = "today"
     _notify_type = ""
     _focus_sites: list = []
+    _inc_baseline_enabled: bool = True
     _scheduler = None
+
+    # 站点累计值持久化快照的 plugindata key
+    SNAPSHOT_KEY = "site_totals"
 
     def init_plugin(self, config: dict = None):
         self.siteoper = SiteOper()
@@ -73,6 +123,8 @@ class sitedailystatisticmodern(_PluginBase):
             self._dashboard_type = config.get("dashboard_type") or "today"
             self._notify_type = config.get("notify_type") or ""
             self._focus_sites = config.get("focus_sites") or []
+            baseline_enabled = config.get("inc_baseline_enabled")
+            self._inc_baseline_enabled = True if baseline_enabled is None else bool(baseline_enabled)
 
         if self._onlyonce:
             config["onlyonce"] = False
@@ -221,6 +273,29 @@ class sitedailystatisticmodern(_PluginBase):
                         'content': [
                             {
                                 'component': 'VCol',
+                                'props': {
+                                    'cols': 12,
+                                    'md': 6
+                                },
+                                'content': [
+                                    {
+                                        'component': 'VSwitch',
+                                        'props': {
+                                            'model': 'inc_baseline_enabled',
+                                            'label': '增量基线持久化',
+                                            'hint': '站点采集失败或某天缺数据时，用上次有效累计值做基线，避免恢复后把历史累计当成当日增量',
+                                            'persistent-hint': True,
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        'component': 'VRow',
+                        'content': [
+                            {
+                                'component': 'VCol',
                                 'content': [
                                     {
                                         'component': 'VSelect',
@@ -242,7 +317,8 @@ class sitedailystatisticmodern(_PluginBase):
             "enabled": False,
             "onlyonce": False,
             "dashboard_type": 'today',
-            "focus_sites": []
+            "focus_sites": [],
+            "inc_baseline_enabled": True
         }
 
     @eventmanager.register(EventType.SiteRefreshed)
@@ -254,83 +330,191 @@ class sitedailystatisticmodern(_PluginBase):
             return
         if event.event_data.get('site_id') != "*":
             return
-        # 获取站点数据
-        today, today_data, yesterday_data = self.__get_data()
-        # 转换为字典
-        today_data_dict = {data.name: data for data in today_data}
-        yesterday_data_dict = {data.name: data for data in yesterday_data}
+        # 获取统计数据（今日行、基线行、持久化快照）
+        ctx = self.__get_data()
+        today_data = ctx["today_data"]
+        baseline_map = ctx["baseline_map"]
+        snapshot = ctx["snapshot"]
+        today_date = ctx["today"]
         # 消息内容
         messages = {}
         # 总上传
         incUploads = 0
         # 总下载
         incDownloads = 0
-        # 今天的日期
-        today_date = datetime.now().strftime("%Y-%m-%d")
 
-        for rand, site in enumerate(today_data_dict.keys()):
+        for rand, row in enumerate(today_data):
+            site = row.name
             # 关注站点过滤：配置了则只推送列表内的站点
             if self._focus_sites and site not in self._focus_sites:
                 continue
-            upload = int(today_data_dict[site].upload or 0)
-            download = int(today_data_dict[site].download or 0)
-            updated_date = today_data_dict[site].updated_day
+            upload = int(float(row.upload or 0))
+            download = int(float(row.download or 0))
+            baseline = baseline_map.get(row.domain)
+            gap = 0
+            if self._notify_type == "inc":
+                upload, download, gap = _calc_inc(row, baseline)
 
-            if self._notify_type == "inc" and yesterday_data_dict.get(site):
-                upload -= int(yesterday_data_dict[site].upload or 0)
-                download -= int(yesterday_data_dict[site].download or 0)
-
-            if updated_date and updated_date != today_date:
-                updated_date = f"（{updated_date}）"
-            else:
-                updated_date = ""
+            note = ""
+            if gap > 0 and baseline is not None:
+                note = f"（基线 {baseline.updated_day}，补 {gap} 天）"
+            elif row.updated_day and row.updated_day != today_date:
+                note = f"（{row.updated_day}）"
 
             if upload > 0 or download > 0:
                 incUploads += upload
                 incDownloads += download
                 messages[upload + (rand / 1000)] = (
-                        f"【{site}】{updated_date}\n"
+                        f"【{site}】{note}\n"
                         + f"上传量：{StringUtils.str_filesize(upload)}\n"
                         + f"下载量：{StringUtils.str_filesize(download)}\n"
                         + "————————————"
                 )
 
-        if incDownloads or incUploads:
+        # 今日采集失败的站点：有历史快照但今天没有数据行，显式提示而不是静默消失
+        stale_sites = []
+        if self._notify_type == "inc":
+            today_domains = {row.domain for row in today_data}
+            for domain, item in (snapshot or {}).items():
+                if domain in today_domains:
+                    continue
+                last_day = item.get("day") or ""
+                try:
+                    missing_days = (datetime.strptime(today_date, "%Y-%m-%d")
+                                    - datetime.strptime(last_day[:10], "%Y-%m-%d")).days
+                except ValueError:
+                    continue
+                # 只提示 7 天内有有效数据的站点，避免历史残留长期占位
+                if missing_days > 7:
+                    continue
+                name = item.get("name") or domain
+                if self._focus_sites and name not in self._focus_sites:
+                    continue
+                stale_sites.append(f"{name}（上次 {last_day}）")
+
+        if incDownloads or incUploads or stale_sites:
             sorted_messages = [messages[key] for key in sorted(messages.keys(), reverse=True)]
             sorted_messages.insert(0, f"【汇总】\n"
                                       f"总上传：{StringUtils.str_filesize(incUploads)}\n"
                                       f"总下载：{StringUtils.str_filesize(incDownloads)}\n"
                                       f"————————————")
+            if stale_sites:
+                sorted_messages.append("⚠️ 今日未采集成功：" + "、".join(stale_sites))
             self.post_message(mtype=NotificationType.SiteMessage,
                               title="站点数据统计", text="\n".join(sorted_messages))
 
-    def __get_data(self) -> Tuple[str, List[SiteUserData], List[SiteUserData]]:
+    def _load_snapshot(self) -> Dict[str, dict]:
         """
-        获取今天的日期、今天的站点数据、昨天的站点数据
+        读取站点累计值持久化快照（存 MP plugindata，容器重启/插件重载不丢）
         """
-        # 获取最近所有数据
-        data_list: List[SiteUserData] = self.siteoper.get_userdata()
-        if not data_list:
-            return "", [], []
-        # 每个日期、每个站点只保留最后一条数据
-        data_list = list({f"{data.updated_day}_{data.name}": data for data in data_list}.values())
-        # 按日期倒序排序
-        data_list.sort(key=lambda x: x.updated_day, reverse=True)
-        # 获取今天的日期
-        today = data_list[0].updated_day
-        # 获取昨天的日期
-        yestoday = (datetime.strptime(today, "%Y-%m-%d") - timedelta(days=1)).strftime("%Y-%m-%d")
-        # 今天的数据
-        stattistic_data = [data for data in data_list if data.updated_day == today]
-        # 今日数据按数据量降序排序
-        stattistic_data.sort(key=lambda x: x.upload, reverse=True)
-        # 昨天的数据
-        yesterday_sites_data = [data for data in data_list if data.updated_day == yestoday]
+        try:
+            data = self.get_data(self.SNAPSHOT_KEY)
+        except Exception as e:
+            logger.error(f"读取站点累计快照失败：{str(e)}")
+            return {}
+        return data if isinstance(data, dict) else {}
 
-        return today, stattistic_data, yesterday_sites_data
+    def _update_snapshot(self, rows: List[SiteUserData]) -> Dict[str, dict]:
+        """
+        把本次采集到的有效累计值写入快照。
+        采集失败（err_msg 非空）、累计值为 0、日期比快照旧的场景一律不覆盖，
+        保证快照里始终是「最近一次成功获取到的累计值」。
+        """
+        snapshot = self._load_snapshot()
+        changed = False
+        for row in rows or []:
+            if row is None or not getattr(row, "domain", None):
+                continue
+            if (getattr(row, "err_msg", "") or "").strip():
+                continue
+            try:
+                upload = float(row.upload or 0)
+                download = float(row.download or 0)
+            except (TypeError, ValueError):
+                continue
+            if upload <= 0:
+                continue
+            day = row.updated_day or datetime.now().strftime("%Y-%m-%d")
+            old = snapshot.get(row.domain) or {}
+            if (old.get("day") or "") > day:
+                continue
+            item = {
+                "day": day,
+                "time": row.updated_time or "",
+                "name": row.name,
+                "upload": int(upload),
+                "download": int(download),
+            }
+            if (old.get("day") == item["day"]
+                    and old.get("upload") == item["upload"]
+                    and old.get("download") == item["download"]):
+                continue
+            snapshot[row.domain] = item
+            changed = True
+        if changed:
+            try:
+                self.save_data(self.SNAPSHOT_KEY, snapshot)
+            except Exception as e:
+                logger.error(f"保存站点累计快照失败：{str(e)}")
+        return snapshot
+
+    def __get_data(self) -> Dict[str, Any]:
+        """
+        获取统计上下文：今日各站点最新行、每个站点的增量基线行、持久化快照。
+        基线 = 该站点「今日之前最近一条有效数据」，DB 里没有时用持久化快照兜底，
+        因此某天采集失败也不会让今日增量退化成站点历史累计。
+        """
+        today = datetime.now().strftime("%Y-%m-%d")
+        data_list: List[SiteUserData] = self.siteoper.get_userdata() or []
+        if not data_list:
+            return {"today": today, "today_data": [], "baseline_data": [],
+                    "baseline_map": {}, "snapshot": self._load_snapshot()}
+        # 每个「站点+日期」只保留 updated_time 最新的一条
+        latest: Dict[str, SiteUserData] = {}
+        for data in data_list:
+            key = f"{data.domain}_{data.updated_day}"
+            prev = latest.get(key)
+            if prev is None or (data.updated_time or "") >= (prev.updated_time or ""):
+                latest[key] = data
+        rows = list(latest.values())
+        # 今日数据
+        today_data = [row for row in rows if (row.updated_day or "") == today]
+        today_data.sort(key=lambda x: float(x.upload or 0), reverse=True)
+        # 先落盘快照：今日有效数据 → 持久化
+        snapshot = self._update_snapshot(today_data)
+
+        if self._inc_baseline_enabled:
+            # 基线：每个站点今日之前最近一条有效数据（跨多天缺失也能补齐）
+            baseline_map: Dict[str, SiteUserData] = {}
+            for row in rows:
+                if not row.domain or (row.updated_day or "") >= today:
+                    continue
+                prev = baseline_map.get(row.domain)
+                if prev is None or ((row.updated_day or ""), (row.updated_time or "")) > \
+                        ((prev.updated_day or ""), (prev.updated_time or "")):
+                    baseline_map[row.domain] = row
+            # DB 里没有更早有效行的站点，用持久化快照兜底
+            for domain, item in (snapshot or {}).items():
+                if domain in baseline_map:
+                    continue
+                if (item.get("day") or "") >= today:
+                    continue
+                baseline_map[domain] = _row_from_snapshot(domain, item)
+        else:
+            # 关闭持久化基线时保持旧行为：只用昨天
+            yestoday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+            baseline_map = {row.domain: row for row in rows if (row.updated_day or "") == yestoday}
+
+        return {
+            "today": today,
+            "today_data": today_data,
+            "baseline_data": list(baseline_map.values()),
+            "baseline_map": baseline_map,
+            "snapshot": snapshot,
+        }
 
     @staticmethod
-    def __get_total_elements(today: str, stattistic_data: List[SiteUserData], yesterday_sites_data: List[SiteUserData],
+    def __get_total_elements(today: str, stattistic_data: List[SiteUserData], baseline_sites_data: List[SiteUserData],
                              dashboard: str = "today") -> List[dict]:
         """
         获取统计元素
@@ -343,46 +527,6 @@ class sitedailystatisticmodern(_PluginBase):
             if not value:
                 return 0
             return round(float(value) / 1024 / 1024 / 1024, 1)
-
-        def __is_digit(value: any) -> bool:
-            """
-            判断是否为数字
-            """
-            if value is None:
-                return False
-            if isinstance(value, float) or isinstance(value, int):
-                return True
-            if isinstance(value, str):
-                return value.isdigit()
-            return False
-
-        def __to_numeric(value: any) -> int:
-            """
-            将值转换为整数
-            """
-            if isinstance(value, str):
-                return int(float(value))
-            elif isinstance(value, float) or isinstance(value, int):
-                return int(value)
-            else:
-                logger.error(f'数据类型转换错误 ({value})')
-                return 0
-
-        def __sub_data(d1: dict, d2: dict) -> dict:
-            """
-            计算两个字典相同Key值的差值（如果值为数字），返回新字典
-            """
-            if not d1:
-                return {}
-            if not d2:
-                return d1
-            d = {k: __to_numeric(d1.get(k)) - __to_numeric(d2.get(k)) for k in d1
-                 if k in d2 and __is_digit(d1.get(k)) and __is_digit(d2.get(k))}
-            # 把小于0的数据变成0
-            for k, v in d.items():
-                if str(v).isdigit() and int(v) < 0:
-                    d[k] = 0
-            return d
 
         if dashboard in ['total', 'all']:
             # 总上传量
@@ -676,17 +820,13 @@ class sitedailystatisticmodern(_PluginBase):
             total_elements = []
 
         if dashboard in ["today", "all"]:
-            # 计算增量数据集
+            # 计算增量数据集（基线 = 各站点今日之前最近一条有效数据）
+            baseline_map = {base.domain: base for base in (baseline_sites_data or []) if base.domain}
             inc_data = {}
             for data in stattistic_data:
-                yesterday_datas = [yd for yd in yesterday_sites_data if yd.domain == data.domain]
-                if yesterday_datas:
-                    yesterday_data = yesterday_datas[0]
-                else:
-                    yesterday_data = None
-                inc = __sub_data(data.to_dict(), yesterday_data.to_dict() if yesterday_data else None)
-                if inc:
-                    inc_data[data.name] = inc
+                inc_up, inc_dn, _ = _calc_inc(data, baseline_map.get(data.domain))
+                if inc_up > 0 or inc_dn > 0:
+                    inc_data[data.name] = {"upload": inc_up, "download": inc_dn}
             # 今日上传
             uploads = {k: v for k, v in inc_data.items() if v.get("upload") if v.get("upload") > 0}
             # 今日上传站点
@@ -805,7 +945,10 @@ class sitedailystatisticmodern(_PluginBase):
         # 全局配置
         attrs = {}
         # 获取数据
-        today, stattistic_data, yesterday_sites_data = self.__get_data()
+        ctx = self.__get_data()
+        today = ctx["today"]
+        stattistic_data = ctx["today_data"]
+        baseline_sites_data = ctx["baseline_data"]
         # 汇总
         # 站点统计
         elements = [
@@ -814,7 +957,7 @@ class sitedailystatisticmodern(_PluginBase):
                 'content': self.__get_total_elements(
                     today=today,
                     stattistic_data=stattistic_data,
-                    yesterday_sites_data=yesterday_sites_data,
+                    baseline_sites_data=baseline_sites_data,
                     dashboard=self._dashboard_type
                 )
             }
@@ -833,7 +976,10 @@ class sitedailystatisticmodern(_PluginBase):
                 return '0.0'
 
         # 获取数据
-        today, stattistic_data, yesterday_sites_data = self.__get_data()
+        ctx = self.__get_data()
+        today = ctx["today"]
+        stattistic_data = ctx["today_data"]
+        baseline_sites_data = ctx["baseline_data"]
         if not stattistic_data:
             return [
                 {
@@ -849,7 +995,7 @@ class sitedailystatisticmodern(_PluginBase):
         site_totals = self.__get_total_elements(
             today=today,
             stattistic_data=stattistic_data,
-            yesterday_sites_data=yesterday_sites_data,
+            baseline_sites_data=baseline_sites_data,
             dashboard='all'
         )
 
@@ -1043,48 +1189,70 @@ class sitedailystatisticmodern(_PluginBase):
         )
     
     def refresh_all_sites(self):
-        # 获取最近所有数据
-        data_list: List[SiteUserData] = self.siteoper.get_userdata()
+        """
+        每日 23:59：为今日采集失败的站点补一条有效数据（沿用上次成功获取的值），
+        保证次日有增量基线可用；随后触发一次全站刷新。
+        """
+        today = datetime.now().strftime("%Y-%m-%d")
+        filled, skipped, failed = 0, 0, 0
+        try:
+            data_list: List[SiteUserData] = self.siteoper.get_userdata() or []
+        except Exception as e:
+            logger.error(f"读取站点数据失败，跳过今日补行：{str(e)}")
+            data_list = []
         if data_list:
-            # 获取所有站点名称
-            all_sites_with_domain = {f"{data.domain}" : data.name for data in data_list}
-            all_sites = [domain for domain in all_sites_with_domain.keys() if self.siteoper.exists(domain)]
-            all_sites = [all_sites_with_domain[domain] for domain in all_sites if self.siteoper.get_by_domain(domain).is_active == 1]
-
-            # 每个日期、每个站点只保留最后一条数据
-            data_list = list({f"{data.updated_day}_{data.name}": data for data in data_list}.values())
-            # 按日期倒序排序
-            data_list.sort(key=lambda x: x.updated_day, reverse=True)
-            # 获取今天的日期
-            today = data_list[0].updated_day
-            # 如果站点没有今天的数据，就用昨天的数据填充为今天的数据
-            for site in all_sites:
-                site_data_list = [data for data in data_list if data.name == site]
-                if site_data_list and site_data_list[0].updated_day != today:
-                    newest_site_data = site_data_list[0]
-                    logger.info(f"站点{newest_site_data.name}没有今日（{today}）数据，开始以 {newest_site_data.updated_day} 的数据填充")
+            # 每个站点只保留最近一条
+            latest: Dict[str, SiteUserData] = {}
+            for data in data_list:
+                if not data.domain:
+                    continue
+                prev = latest.get(data.domain)
+                if prev is None or ((data.updated_day or ""), (data.updated_time or "")) > \
+                        ((prev.updated_day or ""), (prev.updated_time or "")):
+                    latest[data.domain] = data
+            # 逐站点补行，单个站点异常不影响其它站点
+            for domain, newest in list(latest.items()):
+                if (newest.updated_day or "") >= today:
+                    continue
+                try:
+                    site = self.siteoper.get_by_domain(domain)
+                    if not site or not getattr(site, "is_active", False):
+                        skipped += 1
+                        continue
                     payload = SSiteUserData(
-                        domain=newest_site_data.domain,
-                        userid=newest_site_data.userid,
-                        username=newest_site_data.username,
-                        user_level=newest_site_data.user_level,
-                        join_at=newest_site_data.join_at,
-                        upload=newest_site_data.upload,
-                        download=newest_site_data.download,
-                        ratio=newest_site_data.ratio,
-                        bonus=newest_site_data.bonus,
-                        seeding=newest_site_data.seeding,
-                        seeding_size=newest_site_data.seeding_size,
-                        seeding_info=newest_site_data.seeding_info or [],
-                        leeching=newest_site_data.leeching,
-                        leeching_size=newest_site_data.leeching_size,
-                        message_unread=newest_site_data.message_unread,
-                        message_unread_contents=newest_site_data.message_unread_contents or [],
+                        domain=domain,
+                        userid=newest.userid,
+                        username=newest.username,
+                        user_level=newest.user_level,
+                        join_at=newest.join_at,
+                        upload=newest.upload,
+                        download=newest.download,
+                        ratio=newest.ratio,
+                        bonus=newest.bonus,
+                        seeding=newest.seeding,
+                        seeding_size=newest.seeding_size,
+                        seeding_info=newest.seeding_info or [],
+                        leeching=newest.leeching,
+                        leeching_size=newest.leeching_size,
+                        message_unread=newest.message_unread,
+                        message_unread_contents=newest.message_unread_contents or [],
                         updated_day=today,
-                        err_msg=newest_site_data.err_msg
+                        err_msg=newest.err_msg
                     ).dict()
-                    self.siteoper.update_userdata(domain=newest_site_data.domain,
-                                          name=newest_site_data.name,
-                                          payload=payload)
-                    logger.info(f"站点{newest_site_data.name}没有今日（{today}）数据，以 {newest_site_data.updated_day} 的数据填充成功")
+                    ok, msg = self.siteoper.update_userdata(domain=domain, name=newest.name, payload=payload)
+                    if ok:
+                        filled += 1
+                        logger.info(f"站点{newest.name}没有今日（{today}）数据，以 {newest.updated_day} 的数据补行成功")
+                    else:
+                        failed += 1
+                        logger.warning(f"站点{newest.name}今日数据补行失败：{msg}")
+                except Exception as e:
+                    failed += 1
+                    logger.error(f"站点{newest.name}今日数据补行异常：{str(e)}")
+        logger.info(f"站点数据补行完成（{today}）：补行 {filled} 个，跳过 {skipped} 个（站点不存在或未启用），失败 {failed} 个")
+        # 顺带刷新一次持久化快照（补行后的值也会写进快照，作为次日基线）
+        try:
+            self.__get_data()
+        except Exception as e:
+            logger.error(f"刷新站点累计快照失败：{str(e)}")
         self.sitechain.refresh_userdatas()
