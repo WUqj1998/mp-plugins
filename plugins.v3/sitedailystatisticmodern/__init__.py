@@ -80,7 +80,7 @@ class sitedailystatisticmodern(_PluginBase):
     # 插件图标
     plugin_icon = "Collabora_A.png"
     # 插件版本
-    plugin_version = "4.1"
+    plugin_version = "4.2"
     # 插件作者
     plugin_author = "Xiang（本地定制 · AI 修改）"
     # 作者主页
@@ -480,7 +480,9 @@ class sitedailystatisticmodern(_PluginBase):
         # 今日数据
         today_data = [row for row in rows if (row.updated_day or "") == today]
         today_data.sort(key=lambda x: float(x.upload or 0), reverse=True)
-        # 先落盘快照：今日有效数据 → 持久化
+        # 先留存「上次成功采集」的快照：DB 里没有有效旧行时用它兜底当基线
+        prev_snapshot = self._load_snapshot()
+        # 再落盘快照：今日有效数据 → 持久化
         snapshot = self._update_snapshot(today_data)
 
         if self._inc_baseline_enabled:
@@ -489,12 +491,19 @@ class sitedailystatisticmodern(_PluginBase):
             for row in rows:
                 if not row.domain or (row.updated_day or "") >= today:
                     continue
+                # 采集失败时 MP 会写入 upload=0 的脏行（err_msg 还可能为空），
+                # 这种行绝不能当基线，否则今日增量会退化成站点历史累计
+                try:
+                    if float(row.upload or 0) <= 0:
+                        continue
+                except (TypeError, ValueError):
+                    continue
                 prev = baseline_map.get(row.domain)
                 if prev is None or ((row.updated_day or ""), (row.updated_time or "")) > \
                         ((prev.updated_day or ""), (prev.updated_time or "")):
                     baseline_map[row.domain] = row
             # DB 里没有更早有效行的站点，用持久化快照兜底
-            for domain, item in (snapshot or {}).items():
+            for domain, item in (prev_snapshot or {}).items():
                 if domain in baseline_map:
                     continue
                 if (item.get("day") or "") >= today:
