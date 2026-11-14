@@ -62,5 +62,19 @@
       "v2.0.3": "基于官方 2.0.2 定制：新增「上传超时（秒）」配置（默认 300，最小 10），传入 webdav3 客户端 webdav_timeout，修复慢速 WebDAV 下 30s 超时导致备份每日失败。"
     },
     "release": true
+  },
+  "stunnotifyguard": {
+    "name": "STUN 通知守卫",
+    "description": "接收 lucky STUN 全局 Webhook：先用本机实测出口 IP 刷新企业微信应用可信 IP，用企微消息探针验证白名单已生效后再推送；验证失败或转发异常时降级走企微群机器人，避免公网 IP 变化时的通知因 60020 丢失。",
+    "labels": "工具",
+    "version": "1.0.0",
+    "icon": "route.png",
+    "author": "WUqj1998",
+    "level": 1,
+    "system_version": ">=3.0.0",
+    "v3": true,
+    "history": {
+      "v1.0.0": "初始版本：事件驱动刷新企微可信 IP + 探针验证 + 降级群机器人"
+    }
   }
 }
