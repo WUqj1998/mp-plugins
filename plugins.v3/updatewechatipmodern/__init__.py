@@ -1,5 +1,5 @@
 """
-动态企微可信IP 插件（魔改独立版）v5.1.5
+动态企微可信IP 插件（魔改独立版）v5.1.7
 基于MP CookieCloudHelper自动获取Cookie，删除二维码登录功能
 """
 import re
@@ -20,7 +20,7 @@ class updatewechatipmodern(_PluginBase):
     plugin_name = "动态企微可信IP(魔改)"
     plugin_desc = "[魔改版] 自动更新企微应用可信IP，支持Cookie惰性获取、立即运行、IP缓存"
     plugin_icon = "Wecom_A.png"
-    plugin_version = "5.1.6"
+    plugin_version = "5.1.7"
     plugin_author = "书小白（本地魔改 · AI 修改）"
     author_url = "https://github.com/thshu/MoviePilot-Plugins"
     plugin_config_prefix = "updatewechatipmodern_"
@@ -524,11 +524,12 @@ class updatewechatipmodern(_PluginBase):
             return "未知"
         return party_list[0].get("name", "未知")
 
-    def _save_ip_config(self):
-        """保存IP配置到企业微信（实际API调用）"""
+    def _save_ip_config(self) -> bool:
+        """保存IP配置到企业微信（实际API调用）。返回企微是否确认写入成功。"""
         _update_log = []
         url = 'https://work.weixin.qq.com/wework_admin/apps/saveIpConfig?lang=zh_CN&f=json&ajax=1'
-        
+        results = []
+
         for appId in self._app_id.split(','):
             appId = appId.strip()
             if not appId:
@@ -541,6 +542,7 @@ class updatewechatipmodern(_PluginBase):
             res = self._se.post(url, data=data, headers=self._headers)
             
             success = 'err' not in res.text
+            results.append(success)
             status_msg = "成功" if success else "失败"
             
             if success:
@@ -571,6 +573,7 @@ class updatewechatipmodern(_PluginBase):
             all_logs = sorted(all_logs, key=lambda x: x.UpdateTime, reverse=True)[:self._MaxLogEntries]
         
         self.save_data(self._UpdateLogKey, [i.to_dict() for i in all_logs])
+        return bool(results) and all(results)
 
     def UpdateIp(self, ip: str):
         """手动触发IP更新"""
@@ -686,25 +689,12 @@ class updatewechatipmodern(_PluginBase):
             logger.info(f"公网IP获取成功: {self._ip}")
 
             # 获取应用配置并比较IP
-            # 从数据库读取缓存
-            from app.db.systemconfig_oper import SystemConfigOper
-            db = SystemConfigOper()
-            cached_config = db.get("plugin.updatewechatipmodern") or {}
-            cached_ip = cached_config.get("_last_checked_ip")
-            cached_app_config = cached_config.get("_last_app_config")
-            
-            # 如果IP没变且已有缓存配置，跳过API调用
-            if cached_ip == self._ip and cached_app_config is not None:
-                logger.info(f"IP未变化 ({self._ip})，使用缓存配置")
-                app_config = cached_app_config
-            else:
-                logger.info("获取应用配置...")
-                app_config = self._get_corp_app_v2()
-                # 保存缓存到数据库
-                cached_config["_last_checked_ip"] = self._ip
-                cached_config["_last_app_config"] = app_config
-                db.set("plugin.updatewechatipmodern", cached_config)
-            
+            # 每次都以企微真实白名单为准：旧实现「IP 未变则复用 _last_app_config 缓存」，
+            # 而写白名单后从不回写该缓存，缓存一旦陈旧就永久陈旧，导致每轮都判
+            # 「不在白名单」并重复写入一次（2026-11-15 实测：连刷新两轮白名单）。
+            logger.info("获取应用配置...")
+            app_config = self._get_corp_app_v2()
+
             app_config_ips = app_config.get('app', {}).get('white_ip_list', {}).get('ip', [])
             logger.info(f"当前白名单IP: {app_config_ips}")
 
@@ -712,11 +702,14 @@ class updatewechatipmodern(_PluginBase):
             if self._ip not in app_config_ips:
                 logger.info(f"IP {self._ip} 不在白名单中，准备更新...")
                 try:
-                    self._save_ip_config()
-                    ip_updated = True
-                    logger.info("✅ IP更新成功")
+                    # 以企微返回结果为准，失败不再报成功
+                    ip_updated = self._save_ip_config()
                 except Exception as e:
                     logger.error(f"❌ IP更新失败: {e}")
+                if ip_updated:
+                    logger.info("✅ IP更新成功")
+                else:
+                    logger.error("❌ IP更新失败：企微未确认白名单写入")
             else:
                 logger.info(f"IP {self._ip} 已在白名单中，无需更新")
                 ip_updated = True  # 已在白名单中，算成功
