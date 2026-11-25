@@ -20,7 +20,7 @@ class updatewechatipmodern(_PluginBase):
     plugin_name = "动态企微可信IP(魔改)"
     plugin_desc = "[魔改版] 自动更新企微应用可信IP，支持Cookie惰性获取、立即运行、IP缓存"
     plugin_icon = "Wecom_A.png"
-    plugin_version = "5.1.7"
+    plugin_version = "5.1.8"
     plugin_author = "书小白（本地魔改 · AI 修改）"
     author_url = "https://github.com/thshu/MoviePilot-Plugins"
     plugin_config_prefix = "updatewechatipmodern_"
@@ -48,11 +48,11 @@ class updatewechatipmodern(_PluginBase):
     _run_now = False  # 立即运行触发器（不保存）
 
     # IP检测服务列表（已去重，全部为 IPv4 源：本网络下 myip.ipip.net 连接被重置且返回 IPv6，4.ipw.cn 不可达）
+    # ip.3322.net 已于 2026-11 停掉 HTTPS（443 不通，仅 80 可用），移出列表；oray 实测最快，置首
     _ip_urls = [
-        "https://ip.3322.net",
-        "https://ipv4.icanhazip.com",
-        "https://api-ipv4.ip.sb/ip",
         "https://ddns.oray.com/checkip",
+        "https://api-ipv4.ip.sb/ip",
+        "https://ipv4.icanhazip.com",
     ]
     _ip_pattern = r'\b(?:[0-9]{1,3}\.){3}[0-9]{1,3}\b'
 
@@ -584,7 +584,7 @@ class updatewechatipmodern(_PluginBase):
         """获取公网IP"""
         for url in self._ip_urls:
             try:
-                response = requests.get(url, timeout=3)
+                response = requests.get(url, timeout=5)
                 if response.status_code == 200:
                     ip_address = re.search(self._ip_pattern, response.text)
                     if ip_address:
